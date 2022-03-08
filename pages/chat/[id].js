@@ -51,6 +51,7 @@ export async function getServerSideProps(context) {
       id: doc.id,
       ...doc.data(),
     }))
+
     .map((messages) => ({
       ...messages,
       timestamp: messages.timestamp.toDate().getTime(),
@@ -63,6 +64,8 @@ export async function getServerSideProps(context) {
     id: chatRes.id,
     ...chatRes.data(),
   };
+
+  console.log(chat);
 
   return {
     props: {

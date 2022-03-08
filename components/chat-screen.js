@@ -1,6 +1,6 @@
 import { Avatar, IconButton } from "@mui/material";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import styled from "styled-components";
 import { auth, db } from "../firebase";
@@ -16,51 +16,65 @@ import {
   query,
   serverTimestamp,
   setDoc,
+  startAt,
+  where,
 } from "firebase/firestore";
 import Message from "./message";
 import InsertEmoticonIcon from "@mui/icons-material/InsertEmoticon";
 import MicIcon from "@mui/icons-material/Mic";
+import getRecipientEmail from "../utils/get-recipient-email";
+import TimeAgo from "timeago-react";
 
 const ChatScreen = ({ chat, messages }) => {
   const [user] = useAuthState(auth);
   const router = useRouter();
+  const endOfMessagesRef = useRef(null);
 
   const [input, setInput] = useState("");
 
   const docRef = doc(db, "chats", router.query.id);
   const messageRef = collection(docRef, "messages");
-  // const q = query(messageRef, orderBy("timestamp, asc"));
 
   const messagesRes = query(
     collection(docRef, "messages"),
     orderBy("timestamp", "asc")
   );
 
-  // const messagesSnapshot = useCollection(q);
+  const usersDocRef = collection(db, "users");
+
+  const userRef = query(
+    usersDocRef,
+    where("email", "==", getRecipientEmail(chat.users, user))
+  );
+
+  const [recipientSnapshot] = useCollection(userRef);
 
   const [messagesSnapshot] = useCollection(messagesRes);
+
   const showMessages = () => {
-    // if (messagesSnapshot) {
-    //   return messagesSnapshot.docs?.map((message) => (
-    //     <Message
-    //       key={message.id}
-    //       user={message.data().user}
-    //       message={{
-    //         ...message.data(),
-    //         timestamp: message.data().timestamp?.toDate().getTime(),
-    //       }}
-    //     />
-    //   ));
-    // } else {
-    //   return JSON.parse(messages).map((message) => (
-    //     <Message key={message.id} user={message.user} message={message} />
-    //   ));
-    // }
     if (messagesSnapshot) {
-      messagesSnapshot.docs.map((val) => console.log(val.data().message));
+      return messagesSnapshot.docs?.map((message) => (
+        <Message
+          key={message.id}
+          user={message.data().user}
+          message={{
+            ...message.data(),
+            timestamp: message.data().timestamp?.toDate().getTime(),
+          }}
+        />
+      ));
     } else {
-      console.log("no");
+      return JSON.parse(messages).map((message) => (
+        <Message key={message.id} user={message.user} message={message} />
+      ));
     }
+  };
+
+  const scrollToBottom = () => {
+    endOfMessagesRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   };
 
   const sendMessage = (e) => {
@@ -84,15 +98,33 @@ const ChatScreen = ({ chat, messages }) => {
     });
 
     setInput("");
+    scrollToBottom();
   };
 
+  const recipientEmail = getRecipientEmail(chat.users, user);
+  const recipient = recipientSnapshot?.docs[0]?.data();
   return (
     <Container>
       <Header>
-        <Avatar />
+        {recipient ? (
+          <Avatar src={recipient?.photoURL} />
+        ) : (
+          <Avatar>{recipientEmail[0]}</Avatar>
+        )}
         <HeaderInformation>
-          <h3>Rec Email</h3>
-          <p>Last seen ...</p>
+          <h3>{recipientEmail}</h3>
+          {recipientSnapshot ? (
+            <p>
+              Last active{" "}
+              {recipient?.lastSeen?.toDate() ? (
+                <TimeAgo datetime={recipient?.lastSeen.toDate()} />
+              ) : (
+                "Unavailable"
+              )}
+            </p>
+          ) : (
+            <p>Loading Last active ...</p>
+          )}
         </HeaderInformation>
         <HeaderIcons>
           <IconButton>
@@ -107,7 +139,7 @@ const ChatScreen = ({ chat, messages }) => {
 
       <MessageContainer>
         {showMessages()}
-        <EndOfMessage />
+        <EndOfMessage ref={endOfMessagesRef} />
       </MessageContainer>
 
       <InputContainer>
@@ -160,7 +192,9 @@ const MessageContainer = styled.div`
   z-index: 1;
 `;
 
-const EndOfMessage = styled.div``;
+const EndOfMessage = styled.div`
+  margin-bottom: 50px;
+`;
 
 const InputContainer = styled.form`
   display: flex;

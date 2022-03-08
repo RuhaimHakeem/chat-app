@@ -32,7 +32,7 @@ const Chat = ({ id, users }) => {
       {recipient ? (
         <UserAvatar src={recipient?.photoURL} />
       ) : (
-        <UserAvatar src={recipientEmail[0]} />
+        <UserAvatar>{recipientEmail[0]}</UserAvatar>
       )}
 
       <p>{recipientEmail}</p>
