@@ -175,7 +175,7 @@ const HeaderInformation = styled.div`
   flex: 1;
 
   h3 {
-    margin-bottom: 3px;
+    margin-bottom: -10px;
   }
   p {
     font-size: 14px;
