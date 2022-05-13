@@ -21,7 +21,10 @@ const Chat = ({ chat, messages }) => {
       <Head>
         <title>Chat With {getRecipientEmail(chat.users, user)}</title>
       </Head>
-      <Sidebar />
+      <SidebarContainer>
+        <Sidebar />
+      </SidebarContainer>
+
       <ChatContainer>
         <ChatScreen chat={chat} messages={messages} />
       </ChatContainer>
@@ -74,6 +77,12 @@ export async function getServerSideProps(context) {
     },
   };
 }
+
+const SidebarContainer = styled.div`
+  @media screen and (max-width: 450px) {
+    display: none;
+  }
+`;
 
 const Container = styled.div`
   display: flex;

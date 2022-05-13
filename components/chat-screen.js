@@ -1,6 +1,6 @@
 import { Avatar, IconButton } from "@mui/material";
 import { useRouter } from "next/router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import styled from "styled-components";
 import { auth, db } from "../firebase";
@@ -21,6 +21,7 @@ import {
 } from "firebase/firestore";
 import Message from "./message";
 import InsertEmoticonIcon from "@mui/icons-material/InsertEmoticon";
+import SendIcon from "@mui/icons-material/Send";
 import MicIcon from "@mui/icons-material/Mic";
 import getRecipientEmail from "../utils/get-recipient-email";
 import TimeAgo from "timeago-react";
@@ -101,6 +102,16 @@ const ChatScreen = ({ chat, messages }) => {
     scrollToBottom();
   };
 
+  const x = window.matchMedia("(max-width: 450px)");
+
+  const [view, setView] = useState(false);
+
+  useEffect(() => {
+    if (x.matches) {
+      setView(true);
+    }
+  }, []);
+
   const recipientEmail = getRecipientEmail(chat.users, user);
   const recipient = recipientSnapshot?.docs[0]?.data();
   return (
@@ -145,10 +156,15 @@ const ChatScreen = ({ chat, messages }) => {
       <InputContainer>
         <InsertEmoticonIcon />
         <Input value={input} onChange={(e) => setInput(e.target.value)} />
-        <button hidden disabled={!input} type="submit" onClick={sendMessage}>
-          Send Message
-        </button>
-        <MicIcon />
+        {view ? (
+          <Button disabled={!input} type="submit" onClick={sendMessage}>
+            <SendIcon />
+          </Button>
+        ) : (
+          <Button hidden disabled={!input} type="submit" onClick={sendMessage}>
+            <SendIcon />
+          </Button>
+        )}
       </InputContainer>
     </Container>
   );
@@ -183,8 +199,9 @@ const HeaderInformation = styled.div`
   }
 `;
 
-const HeaderIcons = styled.div``;
-
+const HeaderIcons = styled.div`
+  display: flex;
+`;
 const MessageContainer = styled.div`
   padding: 30px;
   background-color: #e5ded8;
@@ -215,4 +232,8 @@ const Input = styled.input`
   padding: 20px;
   margin-left: 15px;
   margin-right: 15px;
+`;
+
+const Button = styled.button`
+  border: none;
 `;

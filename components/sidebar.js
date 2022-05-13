@@ -9,6 +9,7 @@ import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useCollection } from "react-firebase-hooks/firestore";
 import Chat from "./chat";
+import useState from "react";
 
 const Sidebar = () => {
   const [user] = useAuthState(auth);
@@ -22,7 +23,7 @@ const Sidebar = () => {
 
   const createChat = () => {
     const input = prompt(
-      "Please enter an email address for the user you wish to chat with "
+      "Please enter an email address for the user you wish to chat with"
     );
 
     if (!input) return null;
